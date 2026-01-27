@@ -1,0 +1,127 @@
+const express = require("express");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const Subscription = require("../models/Subscription");
+
+const router = express.Router();
+
+/**
+ * SIGNUP (only allowed if email already has a subscription)
+ */
+router.post("/signup", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ msg: "User already exists" });
+    }
+
+    // Check if this email has an active subscription
+    const sub = await Subscription.findOne({ email, active: true });
+
+    if (!sub) {
+      return res.status(403).json({
+        msg: "No active plan found. Please pay first."
+      });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+  // 🔥 Auto-generate tenantId (one tenant = one CRM)
+const tenantId = "tenant_" + Date.now();
+
+const user = new User({
+  name,
+  email,
+  password: hashedPassword,
+  role: "admin",
+  subscriptionId: sub._id,
+  tenantId: tenantId
+ // 👈 VERY IMPORTANT
+});
+
+    await user.save();
+
+    res.json({ msg: "Signup successful. Please login." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * LOGIN
+ */
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ msg: "User not found" });
+    }
+// ❌ Blocked user cannot login
+if (user.isBlocked) {
+  return res.status(403).json({
+    msg: "Your account is blocked. Please contact support."
+  });
+}
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: "Invalid password" });
+    }
+
+   // 🔥 Only ADMIN needs subscription check
+if (user.role === "admin") {
+  const sub = await Subscription.findById(user.subscriptionId);
+
+  if (!sub || !sub.active) {
+    return res.status(403).json({
+      msg: "Your plan is inactive or expired."
+    });
+  }
+
+  const today = new Date();
+  if (today >= sub.endDate) {
+    sub.active = false;
+    await sub.save();
+
+    return res.status(403).json({
+      msg: "Your plan expired. Please renew."
+    });
+  }
+}
+
+
+  const token = jwt.sign(
+  {
+    id: user._id,
+    role: user.role,
+    email: user.email,
+    tenantId: user.tenantId // 🔥 ADD THIS
+  },
+  process.env.JWT_SECRET,
+  { expiresIn: "7d" }
+);
+
+
+
+  res.json({
+  token,
+  role: user.role,
+  tenantId: user.tenantId // 👈 SEND TO FRONTEND
+});
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;
