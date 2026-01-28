@@ -7,11 +7,12 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const startExpiryReminderJob = require("./jobs/expiryReminder");
 const userRoutes = require("./routes/userRoutes");
 const superAdminRoutes = require("./routes/superAdminRoutes");
-
+const helmet = require("helmet");
 const authRoutes = require("./routes/authRoutes");   // <-- ADD THIS
 
 const app = express();
 
+app.use(helmet());
 app.use(express.json());
 app.use(cors());
 app.use("/api/payment", paymentRoutes);
