@@ -12,9 +12,22 @@ const authRoutes = require("./routes/authRoutes");   // <-- ADD THIS
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://saasproduct-ui.onrender.com"
+    ],
+    credentials: true
+  })
+);
 app.use(express.json());
-app.use(cors());
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: false,
+  })
+);
+
 app.use("/api/payment", paymentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/users", userRoutes);
