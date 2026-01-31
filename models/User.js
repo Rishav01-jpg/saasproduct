@@ -39,6 +39,10 @@ isBlocked: {
   type: Boolean,
   default: false
 },
+lastDashboard: {
+  type: require("mongoose").Schema.Types.ObjectId,
+  ref: "Dashboard"
+},
 
     // STAFF / MANAGER belongs to one dashboard
     dashboardId: {

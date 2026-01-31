@@ -23,13 +23,9 @@ if (!user) {
 }
 
 // Attach FULL user info to req
-req.user = {
-  id: user._id,
-  email: user.email,
-  role: user.role,
-  tenantId: user.tenantId, 
-  dashboardId: user.dashboardId
-};
+// Attach FULL mongoose user document
+req.user = user;
+
 
 next();
 

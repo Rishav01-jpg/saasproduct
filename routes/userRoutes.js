@@ -143,6 +143,41 @@ router.delete("/team/:id", auth, checkSub, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// USER → Save last opened dashboard
+router.put("/last-dashboard", auth, async (req, res) => {
+  try {
+    const { dashboardId } = req.body;
+
+    // Check dashboard belongs to same tenant
+    const dashboard = await Dashboard.findOne({
+      _id: dashboardId,
+      tenantId: req.user.tenantId
+    });
+
+    if (!dashboard) {
+      return res.status(404).json({ msg: "Dashboard not found" });
+    }
+
+    req.user.lastDashboard = dashboardId;
+    await req.user.save();
+
+    res.json({ msg: "Last dashboard updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// USER → Get logged-in user profile (with last opened dashboard)
+router.get("/me", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .select("-password")
+      .populate("lastDashboard", "name");
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
 

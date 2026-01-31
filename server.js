@@ -16,6 +16,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
+      "http://10.232.127.49:5173",
       "https://saasproduct-ui.onrender.com"
     ],
     credentials: true
