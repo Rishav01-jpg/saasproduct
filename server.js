@@ -9,7 +9,9 @@ const userRoutes = require("./routes/userRoutes");
 const superAdminRoutes = require("./routes/superAdminRoutes");
 const helmet = require("helmet");
 const authRoutes = require("./routes/authRoutes");   // <-- ADD THIS
-
+const leadRoutes = require("./routes/leadRoutes"); 
+const callHistoryRoutes = require("./routes/callHistoryRoutes");
+const exotelRoutes = require("./routes/exotelRoutes");
 const app = express();
 
 app.use(
@@ -17,7 +19,10 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://10.232.127.49:5173",
-      "https://saasproduct-ui.onrender.com"
+      
+      "https://saasproduct-ui.onrender.com",
+      "https://hoppscotch.io"
+
     ],
     credentials: true
   })
@@ -33,7 +38,9 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/super", superAdminRoutes);
-
+app.use("/api/leads", leadRoutes);
+app.use("/api/call-history", callHistoryRoutes);
+app.use("/api/exotel", exotelRoutes);
 connectDB();
 startExpiryReminderJob();
 

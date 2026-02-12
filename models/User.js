@@ -27,7 +27,12 @@ const UserSchema = new mongoose.Schema(
   type: String,
   required: true,
 },
-
+ exotel: {
+      sid: { type: String, default: "" },
+      apiKey: { type: String, default: "" },
+      apiToken: { type: String, default: "" },
+       callerId: { type: String, default: "" } 
+    },
 
     // Only ADMIN (paid user) has subscription
     subscriptionId: {

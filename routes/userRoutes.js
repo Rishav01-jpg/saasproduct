@@ -178,6 +178,24 @@ router.get("/me", auth, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+router.post("/save-exotel", auth, async (req, res) => {
+  try {
+    const { sid, apiKey, apiToken, callerId } = req.body;
+
+    if (!sid || !apiKey || !apiToken || !callerId) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    await User.findByIdAndUpdate(req.user.id, {
+      exotel: { sid, apiKey, apiToken, callerId }
+    });
+
+    res.json({ message: "Exotel connected successfully" });
+
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 
 
