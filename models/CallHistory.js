@@ -12,7 +12,7 @@ const callHistorySchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["Completed", "Missed", "Busy", "No Answer"],
+    enum: ["New", "Contacted", "Qualified", "Lost", "Won"],
   },
 
   outcome: String,
