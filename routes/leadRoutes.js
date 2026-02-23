@@ -220,10 +220,12 @@ router.get("/scheduled-calls", auth, async (req, res) => {
       return res.status(400).json({ message: "Dashboard ID is required" });
     }
 
-    const calls = await CallSchedule.find({
-      tenantId: req.user.tenantId,
-      dashboardId: dashboardId
-    })
+   const calls = await CallSchedule.find({
+  tenantId: req.user.tenantId,
+  dashboardId: dashboardId,
+  status: "Scheduled"   // ⭐ ADD THIS LINE
+})
+
       .populate("leadId", "name phone source status")
       .sort({ scheduledAt: -1 });
 
@@ -387,7 +389,7 @@ router.get("/stats/summary", auth, async (req, res) => {
     const lostLeads = await Lead.countDocuments({ ...filter, status: "Lost" });
     const wonLeads = await Lead.countDocuments({ ...filter, status: "Won" });
     const contactedLeads = await Lead.countDocuments({ ...filter, status: "Contacted" });
-
+ const scheduledLeads = await Lead.countDocuments({ ...filter, status: "Scheduled" });
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -403,6 +405,7 @@ router.get("/stats/summary", auth, async (req, res) => {
       qualifiedLeads,
       lostLeads,
       wonLeads,
+      scheduledLeads,
       todayLeads,
     });
 

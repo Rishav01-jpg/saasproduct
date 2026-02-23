@@ -1,6 +1,12 @@
 const mongoose = require("mongoose");
 
 const callHistorySchema = new mongoose.Schema({
+  leadId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Lead",
+  required: true
+},
+
   leadName: String,
   phone: String,
 
@@ -12,7 +18,7 @@ const callHistorySchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["New", "Contacted", "Qualified", "Lost", "Won"],
+    enum: ["New", "Contacted", "Qualified", "Lost", "Won","Scheduled"],
   },
 
   outcome: String,

@@ -18,7 +18,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      " http://192.168.1.7:5173",
+      " http://192.168.1.6:5173",
       
       "https://saasproduct-ui.onrender.com",
       "https://hoppscotch.io"

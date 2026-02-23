@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const CallHistory = require("../models/CallHistory");
+const Lead = require("../models/Lead"); // ⭐ ADD THIS
+
 const auth = require("../middleware/auth");
 
 /* ================= SAVE CALL RESULT ================= */
@@ -13,6 +15,13 @@ router.post("/", auth, async (req, res) => {
     });
 
     await history.save();
+    // ⭐ ALSO UPDATE LEAD STATUS
+if (req.body.leadId && req.body.status) {
+  await Lead.findByIdAndUpdate(req.body.leadId, {
+    status: req.body.status
+  });
+}
+
     res.status(201).json({ message: "Call history saved" });
 
   } catch (err) {
