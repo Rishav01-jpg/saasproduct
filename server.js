@@ -23,8 +23,8 @@ app.use(
       " http://192.168.1.6:5173",
       
       "https://saasproduct-ui.onrender.com",
-      "https://hoppscotch.io"
-
+      "https://hoppscotch.io",
+"https://saasproduct-ui.vercel.app"
     ],
     credentials: true
   })
