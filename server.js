@@ -12,6 +12,8 @@ const authRoutes = require("./routes/authRoutes");   // <-- ADD THIS
 const leadRoutes = require("./routes/leadRoutes"); 
 const callHistoryRoutes = require("./routes/callHistoryRoutes");
 const exotelRoutes = require("./routes/exotelRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
+
 const app = express();
 
 app.use(
@@ -41,6 +43,8 @@ app.use("/api/super", superAdminRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/call-history", callHistoryRoutes);
 app.use("/api/exotel", exotelRoutes);
+app.use("/api/analytics", analyticsRoutes);
+
 connectDB();
 startExpiryReminderJob();
 
