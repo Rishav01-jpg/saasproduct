@@ -14,10 +14,12 @@ const SubscriptionSchema = new mongoose.Schema({
     default: Date.now
   },
   endDate: Date,
+
   active: {
     type: Boolean,
-    default: true
-  }
+    default: false
+  },
+    razorpayOrderId: String
 });
 
 module.exports = mongoose.model("Subscription", SubscriptionSchema);

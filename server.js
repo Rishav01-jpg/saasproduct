@@ -13,14 +13,15 @@ const leadRoutes = require("./routes/leadRoutes");
 const callHistoryRoutes = require("./routes/callHistoryRoutes");
 const exotelRoutes = require("./routes/exotelRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
-
+const demoRoutes = require("./routes/demoRoutes");
+const startDemoReminderJob = require("./jobs/demoReminderJob");
 const app = express();
 
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      " http://192.168.1.6:5173",
+      "http://192.168.1.11:5173",
       
       "https://saasproduct-ui.onrender.com",
       "https://hoppscotch.io",
@@ -44,8 +45,9 @@ app.use("/api/leads", leadRoutes);
 app.use("/api/call-history", callHistoryRoutes);
 app.use("/api/exotel", exotelRoutes);
 app.use("/api/analytics", analyticsRoutes);
-
+app.use("/api/demo", demoRoutes);
 connectDB();
+startDemoReminderJob();
 startExpiryReminderJob();
 
 

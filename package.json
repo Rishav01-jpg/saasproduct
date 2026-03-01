@@ -24,6 +24,6 @@
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
     "razorpay": "^2.9.6",
-    "resend": "^6.8.0"
+    "resend": "^6.9.2"
   }
 }

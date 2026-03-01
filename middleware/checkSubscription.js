@@ -1,14 +1,20 @@
+const User = require("../models/User");
 const Subscription = require("../models/Subscription");
 
 module.exports = async (req, res, next) => {
-  try {// ✅ ONLY ADMIN NEEDS SUBSCRIPTION CHECK
+  try {
+    let ownerEmail = req.user.email;
+
 if (req.user.role !== "admin") {
-  return next();
+  const adminUser = await User.findById(req.user.createdBy);
+  if (adminUser) {
+    ownerEmail = adminUser.email;
+  }
 }
 
-    const email = req.user.email;   // from JWT
+    
 
-    const sub = await Subscription.findOne({ email, active: true });
+   const sub = await Subscription.findOne({ email: ownerEmail, active: true });
 
     if (!sub) {
       return res.status(403).json({

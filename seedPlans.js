@@ -11,17 +11,17 @@ const seedPlans = async () => {
   await Plan.insertMany([
     {
       name: "Basic",
-      price: 1000,
+      price: 5988,
       dashboardsAllowed: 1
     },
     {
       name: "Pro",
-      price: 2000,
+      price: 10788,
       dashboardsAllowed: 2
     },
     {
       name: "Enterprise",
-      price: 3000,
+      price: 19188,
       dashboardsAllowed: -1 // unlimited
     }
   ]);
