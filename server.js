@@ -19,18 +19,13 @@ const app = express();
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://192.168.1.11:5173",
-      "https://ringringcrm.com",
-      
-      "https://saasproduct-ui.onrender.com",
-      "https://hoppscotch.io",
-"https://saasproduct-ui.vercel.app"
-    ],
+    origin: true,   // allow all origins temporarily
     credentials: true
   })
 );
+
+// VERY IMPORTANT for preflight requests
+
 app.use(express.json());
 app.use(
   helmet({
