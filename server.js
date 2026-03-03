@@ -27,11 +27,11 @@ app.use(
 // VERY IMPORTANT for preflight requests
 
 app.use(express.json());
-// app.use(
-//   helmet({
-//     crossOriginOpenerPolicy: false,
-//   })
-// );
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: false,
+  })
+);
 
 app.use("/api/payment", paymentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
