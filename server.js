@@ -21,7 +21,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "http://10.126.41.49:5173",
+      "http://192.168.1.11:5173",
       "https://ringringcrm.com",
       
       "https://saasproduct-ui.onrender.com",
