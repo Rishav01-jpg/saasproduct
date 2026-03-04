@@ -3,20 +3,20 @@ const Subscription = require("../models/Subscription");
 
 module.exports = async (req, res, next) => {
   try {
-    let ownerEmail = req.user.email;
-
-if (req.user.role !== "admin") {
-  const adminUser = await User.findById(req.user.createdBy);
-  if (adminUser) {
-    ownerEmail = adminUser.email;
-  }
+    const adminUser = await User.findOne({
+  tenantId: req.user.tenantId,
+  role: "admin"
+});
+if (!adminUser) {
+  return res.status(403).json({ msg: "Admin not found for this tenant" });
 }
+    
 
     
 
-   const sub = await Subscription.findOne({ email: ownerEmail, active: true });
+   const sub = await Subscription.findById(adminUser.subscriptionId);
 
-    if (!sub) {
+    if (!sub || !sub.active) {
       return res.status(403).json({
         msg: "No active subscription. Please buy or renew your plan."
       });
