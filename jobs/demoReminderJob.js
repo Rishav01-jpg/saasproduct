@@ -13,8 +13,12 @@ const startDemoReminderJob = () => {
       // ⏱ Send reminder exactly 2 minutes after booking (TEST MODE)
       // 🔥 Force reminder at 13:34 PM today
 const reminderTime = new Date(booking.createdAt);
+
+// move to next day
 reminderTime.setDate(reminderTime.getDate() + 1);
-reminderTime.setHours(10, 0, 0, 0);
+
+// force IST time
+reminderTime.setUTCHours(4, 30, 0, 0); 
       console.log("Now:", now.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }));
 console.log("ReminderTime:", reminderTime.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }));
 
