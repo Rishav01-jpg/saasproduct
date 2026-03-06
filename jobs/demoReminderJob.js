@@ -18,13 +18,7 @@ reminderTime.setHours(10, 0, 0, 0);
       console.log("Now:", now.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }));
 console.log("ReminderTime:", reminderTime.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }));
 
-      if (
-        now.getFullYear() === reminderTime.getFullYear() &&
-        now.getMonth() === reminderTime.getMonth() &&
-        now.getDate() === reminderTime.getDate() &&
-        now.getHours() === reminderTime.getHours() &&
-        now.getMinutes() === reminderTime.getMinutes()
-      ) {
+    if (now >= reminderTime)  {
         console.log("📧 Sending reminder to:", booking.email);
 
         await sendDemoReminderEmail(booking, "reminder");
