@@ -12,11 +12,11 @@ const startDemoReminderJob = () => {
     for (let booking of bookings) {
       // ⏱ Send reminder exactly 2 minutes after booking (TEST MODE)
       // 🔥 Force reminder at 13:34 PM today
-const reminderTime = new Date();
+const reminderTime = new Date(booking.createdAt);
+reminderTime.setDate(reminderTime.getDate() + 1);
 reminderTime.setHours(10, 0, 0, 0);
-
-      console.log("Now:", now.toLocaleTimeString());
-      console.log("ReminderTime:", reminderTime.toLocaleTimeString());
+      console.log("Now:", now.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }));
+console.log("ReminderTime:", reminderTime.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }));
 
       if (
         now.getFullYear() === reminderTime.getFullYear() &&
@@ -33,7 +33,9 @@ reminderTime.setHours(10, 0, 0, 0);
         await booking.save();
       }
     }
-  });
+ }, {
+  timezone: "Asia/Kolkata"
+});
 
   console.log("🕒 Reminder cron job started");
 };

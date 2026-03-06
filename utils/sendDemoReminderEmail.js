@@ -15,8 +15,7 @@ const sendDemoEmail = async (booking, type = "confirmation") => {
         <p><b>Date:</b> ${new Date(booking.demoDate).toDateString()}</p>
         <p><b>Time:</b> 11:00 AM</p>
 
-        <p>Join the Zoom session using the link below:</p>
-        <a href="${booking.zoomLink}">${booking.zoomLink}</a>
+        <p>The Zoom meeting link will be sent in the reminder email before your demo starts.</p>
 
         <br/><br/>
         <p>You will also receive a reminder email at 10:00 AM.</p>
