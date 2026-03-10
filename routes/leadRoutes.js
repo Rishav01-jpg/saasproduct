@@ -47,6 +47,11 @@ router.get("/", auth, async (req, res) => {
 
 let filter = { tenantId: req.user.tenantId };
 
+// Staff → only their leads
+if (req.user.role && req.user.role.toLowerCase() === "staff") {
+  filter.assignedTo = req.user._id;
+}
+
 if (dashboardId) {
   filter.dashboardId = dashboardId;
 }
@@ -75,6 +80,7 @@ if (dashboardId) {
     const skip = (page - 1) * limit;
 
     const leads = await Lead.find(filter)
+  .populate("assignedTo", "name email")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit));
@@ -189,13 +195,13 @@ router.post("/:id/schedule-call", auth, async (req, res) => {
     if (!lead) return res.status(404).json({ message: "Lead not found" });
 
     const schedule = new CallSchedule({
-      leadId: lead._id,
-      tenantId: lead.tenantId,
-      dashboardId: lead.dashboardId,
-      phone: lead.phone,
-      scheduledAt: scheduleDate,
-    });
-
+  leadId: lead._id,
+  tenantId: lead.tenantId,
+  dashboardId: lead.dashboardId,
+  phone: lead.phone,
+  scheduledAt: scheduleDate,
+  assignedTo: lead.assignedTo   // ⭐ ADD THIS LINE
+});
     await schedule.save();
 
     res.status(201).json({ message: "Call scheduled", schedule });
@@ -214,19 +220,33 @@ router.post("/:id/schedule-call", auth, async (req, res) => {
 ====================================================== */
 router.get("/scheduled-calls", auth, async (req, res) => {
   try {
+
     const { dashboardId } = req.query;
 
     if (!dashboardId) {
       return res.status(400).json({ message: "Dashboard ID is required" });
     }
 
-   const calls = await CallSchedule.find({
-  tenantId: req.user.tenantId,
-  dashboardId: dashboardId,
-  status: "Scheduled"   // ⭐ ADD THIS LINE
-})
+    let filter = {
+      tenantId: req.user.tenantId,
+      dashboardId: dashboardId,
+      status: "Scheduled"
+    };
 
-      .populate("leadId", "name phone source status")
+    // Staff → only their calls
+    if (req.user.role && req.user.role.toLowerCase() === "staff") {
+      filter.assignedTo = req.user._id;
+    }
+
+    const calls = await CallSchedule.find(filter)
+      .populate({
+        path: "leadId",
+        select: "name phone source status assignedTo",
+        populate: {
+          path: "assignedTo",
+          select: "name email"
+        }
+      })
       .sort({ scheduledAt: -1 });
 
     res.json(calls);
@@ -302,7 +322,78 @@ router.put("/scheduled-calls/:id/status", auth, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+/* ======================================================
+   🎯 BULK ASSIGN LEADS (ADMIN)
+====================================================== */
+router.put("/assign-bulk", auth, roleCheck("admin", "manager"), async (req, res) => {
+  try {
+    const { leadIds, staffId } = req.body;
 
+    if (!leadIds || leadIds.length === 0) {
+      return res.status(400).json({ message: "No leads selected" });
+    }
+
+    const User = require("../models/User");
+
+    const staff = await User.findOne({
+      _id: staffId,
+      tenantId: req.user.tenantId,
+      role: "staff"
+    });
+
+    if (!staff) {
+      return res.status(400).json({ message: "Invalid staff user" });
+    }
+
+    const result = await Lead.updateMany(
+  {
+    _id: { $in: leadIds },
+    tenantId: req.user.tenantId,
+    dashboardId: req.body.dashboardId
+  },
+      {
+        assignedTo: staffId,
+        assignedBy: req.user._id
+      }
+    );
+
+    res.json({
+      message: "Leads assigned successfully",
+      updated: result.modifiedCount
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+/* ======================================================
+   📋 LEAD ASSIGNMENT REPORT (ADMIN / MANAGER)
+====================================================== */
+
+router.get("/stats/lead-assignments", auth, roleCheck("admin", "manager"), async (req, res) => {
+  try {
+
+    const { dashboardId } = req.query;
+
+    let filter = {
+      tenantId: req.user.tenantId
+    };
+
+    if (dashboardId) {
+      filter.dashboardId = dashboardId;
+    }
+
+    const leads = await Lead.find(filter)
+      .populate("assignedTo", "name email")
+      .populate("assignedBy", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json(leads);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 /* ======================================================
    🔍 GET SINGLE LEAD
 ====================================================== */
@@ -329,7 +420,7 @@ router.get("/:id", auth, async (req, res) => {
    ✏️ UPDATE LEAD
    Admin + Manager only
 ====================================================== */
-router.put("/:id", auth, roleCheck("Admin", "Manager"), async (req, res) => {
+router.put("/:id", auth, roleCheck("Admin", "Manager", "Staff"), async (req, res) => {
   try {
     const lead = await Lead.findOneAndUpdate(
       { _id: req.params.id, tenantId: req.user.tenantId },
@@ -353,7 +444,7 @@ router.put("/:id", auth, roleCheck("Admin", "Manager"), async (req, res) => {
    ❌ DELETE LEAD
    Admin only
 ====================================================== */
-router.delete("/:id", auth, roleCheck("Admin"), async (req, res) => {
+router.delete("/:id", auth, roleCheck("admin"), async (req, res) => {
   try {
     const lead = await Lead.findOneAndDelete({
       _id: req.params.id,
@@ -371,7 +462,55 @@ router.delete("/:id", auth, roleCheck("Admin"), async (req, res) => {
   }
 });
 
+/* ======================================================
+   👥 STAFF LEAD DISTRIBUTION (ADMIN DASHBOARD)
+====================================================== */
 
+router.get("/stats/staff-distribution", auth, roleCheck("admin"), async (req, res) => {
+  try {
+
+    const result = await Lead.aggregate([
+      {
+        $match: {
+          tenantId: req.user.tenantId,
+          assignedTo: { $ne: null }
+        }
+      },
+      {
+        $group: {
+          _id: "$assignedTo",
+          totalLeads: { $sum: 1 }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "staff"
+        }
+      },
+      {
+        $unwind: "$staff"
+      },
+      {
+        $project: {
+          staffName: "$staff.name",
+          staffEmail: "$staff.email",
+          totalLeads: 1
+        }
+      },
+      {
+        $sort: { totalLeads: -1 }
+      }
+    ]);
+
+    res.json(result);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 /* ======================================================
    📊 DASHBOARD STATS
 ====================================================== */
@@ -381,6 +520,11 @@ router.get("/stats/summary", auth, async (req, res) => {
     const { dashboardId } = req.query;
 
     let filter = { tenantId };
+
+// ⭐ Staff should see only their own leads stats
+if (req.user.role && req.user.role.toLowerCase() === "staff") {
+  filter.assignedTo = req.user._id;
+}
     if (dashboardId) filter.dashboardId = dashboardId;
 
     const totalLeads = await Lead.countDocuments(filter);
@@ -447,8 +591,51 @@ router.get("/stats/followups-today", auth, async (req, res) => {
   }
 });
 /* ======================================================
-   📞 SCHEDULE CALL
+   🎯 ASSIGN LEAD (ADMIN ONLY)
 ====================================================== */
+
+router.put("/assign/:id", auth, roleCheck("admin", "manager"), async (req, res) => {
+  try {
+
+    const { staffId } = req.body;
+
+// ensure staff belongs to same tenant
+const User = require("../models/User");
+
+const staff = await User.findOne({
+  _id: staffId,
+  tenantId: req.user.tenantId
+});
+
+if (!staff) {
+  return res.status(400).json({ message: "Invalid staff user" });
+}
+
+    const lead = await Lead.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        tenantId: req.user.tenantId
+      },
+      {
+       assignedTo: staffId,
+assignedBy: req.user._id
+      },
+      { new: true }
+    );
+
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+
+    res.json({
+      message: "Lead assigned successfully",
+      lead
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 
 

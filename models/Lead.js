@@ -19,6 +19,17 @@ const leadSchema = new mongoose.Schema({
   type: String,   // ✅ matches your existing tenant system
   required: true,
 },
+assignedTo: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null
+},
+
+assignedBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null
+},
   // ⭐ ADD THIS
   dashboardId: {
     type: mongoose.Schema.Types.ObjectId,

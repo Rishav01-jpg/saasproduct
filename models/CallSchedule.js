@@ -17,6 +17,11 @@ const callScheduleSchema = new mongoose.Schema({
     ref: "Dashboard",
     required: true,
   },
+   // ⭐ ADD THIS
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
 
   phone: String,
 

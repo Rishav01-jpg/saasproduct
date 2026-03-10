@@ -34,10 +34,18 @@ router.get("/", auth, async (req, res) => {
   try {
     const { dashboardId } = req.query;
 
-    const history = await CallHistory.find({
+    let filter = {
       tenantId: req.user.tenantId,
       dashboardId
-    }).sort({ createdAt: -1 });
+    };
+
+    // ⭐ Staff → only their own call history
+    if (req.user.role.toLowerCase() === "staff") {
+      filter.userId = req.user._id;
+    }
+
+    const history = await CallHistory.find(filter)
+      .sort({ createdAt: -1 });
 
     res.json(history);
 

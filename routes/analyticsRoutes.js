@@ -14,7 +14,26 @@ router.get("/overview", auth, async (req, res) => {
     }
 
     const dashId = new mongoose.Types.ObjectId(dashboardId);
+    // ⭐ Create filter
+let leadFilter = {
+  dashboardId: dashId,
+  tenantId: req.user.tenantId
+};
 
+// ⭐ Staff should only see their leads
+if (req.user.role && req.user.role.toLowerCase() === "staff") {
+  leadFilter.assignedTo = req.user._id;
+}
+// ⭐ Call filter
+let callFilter = {
+  dashboardId: dashId,
+  tenantId: req.user.tenantId
+};
+
+// ⭐ Staff should only see their calls
+if (req.user.role && req.user.role.toLowerCase() === "staff") {
+  callFilter.userId = req.user._id;
+}
     /* ================= DATE FILTER ================= */
     let startDate = null;
     const now = new Date();
@@ -34,41 +53,41 @@ router.get("/overview", auth, async (req, res) => {
     const dateMatch = startDate ? { createdAt: { $gte: startDate } } : {};
 
     /* ================= TOTAL METRICS ================= */
-    const totalLeads = await Lead.countDocuments({
-      dashboardId: dashId,
-      ...dateMatch
-    });
+   const totalLeads = await Lead.countDocuments({
+  ...leadFilter,
+  ...dateMatch
+});
 
     const totalCalls = await CallHistory.countDocuments({
-      dashboardId: dashId,
-      ...dateMatch
-    });
+  ...callFilter,
+  ...dateMatch
+});
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    const callsToday = await CallHistory.countDocuments({
-      dashboardId: dashId,
-      createdAt: { $gte: todayStart }
-    });
+   const callsToday = await CallHistory.countDocuments({
+  ...callFilter,
+  createdAt: { $gte: todayStart }
+});
 
-    const wonLeads = await Lead.countDocuments({
-      dashboardId: dashId,
-      status: "Won",
-      ...dateMatch
-    });
+   const wonLeads = await Lead.countDocuments({
+  ...leadFilter,
+  status: "Won",
+  ...dateMatch
+});
 
     const conversionRate =
       totalLeads === 0 ? 0 : ((wonLeads / totalLeads) * 100).toFixed(1);
 
     /* ================= LEAD FUNNEL ================= */
-    const funnel = {
-      new: await Lead.countDocuments({ dashboardId: dashId, status: "New", ...dateMatch }),
-      contacted: await Lead.countDocuments({ dashboardId: dashId, status: "Contacted", ...dateMatch }),
-      qualified: await Lead.countDocuments({ dashboardId: dashId, status: "Qualified", ...dateMatch }),
-      won: wonLeads,
-      lost: await Lead.countDocuments({ dashboardId: dashId, status: "Lost", ...dateMatch })
-    };
+   const funnel = {
+  new: await Lead.countDocuments({ ...leadFilter, status: "New", ...dateMatch }),
+  contacted: await Lead.countDocuments({ ...leadFilter, status: "Contacted", ...dateMatch }),
+  qualified: await Lead.countDocuments({ ...leadFilter, status: "Qualified", ...dateMatch }),
+  won: wonLeads,
+  lost: await Lead.countDocuments({ ...leadFilter, status: "Lost", ...dateMatch })
+};
 
     /* ================= CLEAN CALL OUTCOMES ================= */
     const validOutcomes = [
@@ -81,7 +100,7 @@ router.get("/overview", auth, async (req, res) => {
     ];
 
     const outcomesAgg = await CallHistory.aggregate([
-      { $match: { dashboardId: dashId, outcome: { $in: validOutcomes }, ...dateMatch } },
+      { $match: { ...callFilter, outcome: { $in: validOutcomes }, ...dateMatch } },
       { $group: { _id: "$outcome", count: { $sum: 1 } } }
     ]);
 
@@ -91,10 +110,10 @@ router.get("/overview", auth, async (req, res) => {
     });
 
     /* ================= LEAD SOURCE ANALYTICS ================= */
-    const sourceAgg = await Lead.aggregate([
-      { $match: { dashboardId: dashId, ...dateMatch } },
-      { $group: { _id: "$source", count: { $sum: 1 } } }
-    ]);
+   const sourceAgg = await Lead.aggregate([
+  { $match: { ...leadFilter, ...dateMatch } },
+  { $group: { _id: "$source", count: { $sum: 1 } } }
+]);
 
     const leadSources = sourceAgg.map(s => ({
       source: s._id || "Unknown",

@@ -6,6 +6,7 @@ const Dashboard = require("../models/Dashboard");
 
 const auth = require("../middleware/auth");
 const checkSub = require("../middleware/checkSubscription");
+const roleCheck = require("../middleware/roleCheck");
 const createAuditLog = require("../utils/createAuditLog");
 
 const router = express.Router();
@@ -44,12 +45,26 @@ router.post("/create", auth, checkSub, async (req, res) => {
     }
 
     // 4️⃣ Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        msg: "User already exists"
-      });
+   const existingUser = await User.findOne({
+  email,
+  tenantId: req.user.tenantId
+});
+
+if (existingUser) {
+
+  // update dashboard instead of creating new user
+  existingUser.dashboardId = dashboardId;
+  await existingUser.save();
+
+  return res.json({
+    msg: "User assigned to dashboard successfully",
+    user: {
+      name: existingUser.name,
+      email: existingUser.email,
+      role: existingUser.role
     }
+  });
+}
 
     // 5️⃣ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -196,7 +211,29 @@ router.post("/save-exotel", auth, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+router.get("/staff", auth, roleCheck("admin", "manager"), async (req, res) => {
+  try {
 
+    const { dashboardId } = req.query;
+
+    let filter = {
+      tenantId: req.user.tenantId,
+      role: "staff"
+    };
+
+    // ⭐ Only staff from this dashboard
+    if (dashboardId) {
+      filter.dashboardId = dashboardId;
+    }
+
+    const users = await User.find(filter).select("_id name email");
+
+    res.json(users);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 
 module.exports = router;
