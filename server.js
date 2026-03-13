@@ -14,6 +14,7 @@ const callHistoryRoutes = require("./routes/callHistoryRoutes");
 const exotelRoutes = require("./routes/exotelRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const demoRoutes = require("./routes/demoRoutes");
+const performanceRoutes = require("./routes/performanceRoutes");
 const startDemoReminderJob = require("./jobs/demoReminderJob");
 const app = express();
 
@@ -42,6 +43,7 @@ app.use("/api/call-history", callHistoryRoutes);
 app.use("/api/exotel", exotelRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/demo", demoRoutes);
+app.use("/api/performance", performanceRoutes);
 connectDB();
 startDemoReminderJob();
 startExpiryReminderJob();

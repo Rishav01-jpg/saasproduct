@@ -6,25 +6,25 @@ const Plan = require("./models/Plan");
 const seedPlans = async () => {
   await connectDB();
 
-  await Plan.deleteMany(); // clean old plans (safe now)
+  
 
-  await Plan.insertMany([
-    {
-      name: "Basic",
-      price: 5988,
-      dashboardsAllowed: 1
-    },
-    {
-      name: "Pro",
-      price: 10788,
-      dashboardsAllowed: 2
-    },
-    {
-      name: "Enterprise",
-      price: 19188,
-      dashboardsAllowed: -1 // unlimited
-    }
-  ]);
+ await Plan.updateOne(
+  { name: "Basic" },
+  { $set: { price: 5988, dashboardsAllowed: 1 } },
+  { upsert: true }
+);
+
+await Plan.updateOne(
+  { name: "Pro" },
+  { $set: { price: 10788, dashboardsAllowed: 2 } },
+  { upsert: true }
+);
+
+await Plan.updateOne(
+  { name: "Enterprise" },
+  { $set: { price: 19188, dashboardsAllowed: -1 } },
+  { upsert: true }
+);
 
   console.log("✅ Plans inserted successfully");
   process.exit();

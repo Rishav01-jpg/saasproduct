@@ -384,9 +384,11 @@ router.get("/stats/lead-assignments", auth, roleCheck("admin", "manager"), async
     }
 
     const leads = await Lead.find(filter)
-      .populate("assignedTo", "name email")
-      .populate("assignedBy", "name email")
-      .sort({ createdAt: -1 });
+  .select("name phone status assignedTo assignedBy createdAt") // only needed fields
+  .populate("assignedTo", "name email")
+  .populate("assignedBy", "name email")
+  .sort({ createdAt: -1 })
+  .limit(100); // prevent loading thousands of leads
 
     res.json(leads);
 
