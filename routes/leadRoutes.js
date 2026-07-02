@@ -7,7 +7,18 @@ const multer = require("multer");
 const fs = require("fs");
 const csv = require("csv-parser");
 const CallSchedule = require("../models/CallSchedule");
+const cors = require("cors");
 
+router.options(
+  "/import",
+  cors({
+    origin: [
+      "https://ringringcrm.com",
+      "https://server.ringringcrm.com"
+    ],
+    credentials: true
+  })
+);
 const upload = multer({
   dest: "uploads/" // temp folder for CSV files
 });
