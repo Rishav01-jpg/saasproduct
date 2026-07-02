@@ -20,8 +20,13 @@ const app = express();
 
 app.use(
   cors({
-    origin: true,   // allow all origins temporarily
-    credentials: true
+    origin: [
+      "https://ringringcrm.com",
+      "https://server.ringringcrm.com"
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 
