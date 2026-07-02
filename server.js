@@ -32,6 +32,7 @@ app.use(
 
 // VERY IMPORTANT for preflight requests
 
+app.options("*", cors());
 app.use(express.json());
 app.use(
   helmet({
