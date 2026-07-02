@@ -20,19 +20,13 @@ const app = express();
 
 app.use(
   cors({
-    origin: [
-      "https://ringringcrm.com",
-      "https://server.ringringcrm.com"
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    origin: true,   // allow all origins temporarily
+    credentials: true
   })
 );
 
 // VERY IMPORTANT for preflight requests
 
-app.options("*", cors());
 app.use(express.json());
 app.use(
   helmet({
